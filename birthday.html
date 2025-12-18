@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Deepthi ❤️</title>
+    <style>
+        :root {
+            --primary-pink: #ff4d94;
+            --soft-pink: #fff0f5;
+            --dark-bg: #1a0012;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: var(--soft-pink);
+            margin: 0;
+            overflow-x: hidden;
+            transition: background 1s ease;
+        }
+
+        .container { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 100vh; padding: 20px; 
+        }
+
+        #celebration-screen, #final-screen { display: none; }
+
+        /* Timer Styling */
+        .timer-container { display: flex; gap: 15px; margin: 30px 0; }
+        .time-box {
+            background: white; padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 70px;
+        }
+        .time-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--primary-pink); }
+        .time-box label { font-size: 0.7rem; text-transform: uppercase; color: #777; }
+
+        /* Envelope Logic */
+        .envelope-wrapper {
+            position: relative; width: 300px; height: 200px;
+            background: var(--primary-pink); border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            cursor: pointer; margin: 50px auto; z-index: 1;
+        }
+
+        .envelope-wrapper::before {
+            content: ""; position: absolute; top: 0; left: 0;
+            border-left: 150px solid transparent; border-right: 150px solid transparent; border-radius: 10px;
+            border-top: 120px solid var(--primary-pink); transform-origin: top;
+            transition: transform 0.6s ease; z-index: 3;
+        }
+
+        .envelope-wrapper.open::before { transform: rotateX(180deg); }
+
+        /* The Letter Expansion */
+        .letter-preview {
+            position: absolute; top: 10px; left: 10px;
+            width: 280px; height: 180px; background: white;
+            z-index: 2; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: var(--primary-pink);
+            box-shadow: 0 -5px 10px rgba(0,0,0,0.1);
+        }
+
+        .letter-preview.expand {
+            position: fixed; top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            transform: none !important; z-index: 100;
+            border-radius: 0;
+        }
+
+        /* Message and Photo Section */
+        #final-screen { padding-top: 50px; flex-direction: column; justify-content: flex-start; }
+        
+        .message-card {
+            max-width: 600px; color: #333; line-height: 1.8;
+            padding: 20px; z-index: 101; text-align: left;
+        }
+
+        #typewriter { font-size: 1.1rem; min-height: 100px; }
+        
+        .cursor { display: inline-block; width: 3px; background: var(--primary-pink); margin-left: 2px; animation: blink 0.7s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Photo Grid Styling */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 800px;
+            margin: 40px 0;
+            opacity: 0; /* Hidden initially */
+            transform: translateY(30px);
+            transition: all 1.5s ease;
+            z-index: 101;
+        }
+
+        .photo-grid.show { opacity: 1; transform: translateY(0); }
+
+        .photo-grid img { 
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: 15px; border: 8px solid var(--primary-pink); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        /* Slight tilt for the "Polaroid" look */
+        .photo-grid img:nth-child(odd) { transform: rotate(-2deg); }
+        .photo-grid img:nth-child(even) { transform: rotate(2deg); }
+        .photo-grid img:hover { transform: scale(1.05) rotate(0deg); z-index: 105; }
+
+        .heart { position: fixed; top: -10%; animation: fall linear forwards; z-index: 1000; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="countdown-screen" class="container">
+        <h1 style="color: var(--primary-pink);">Counting down to Deepthi's Day! 💖</h1>
+        <div class="timer-container">
+            <div class="time-box"><span id="days">00</span><label>Days</label></div>
+            <div class="time-box"><span id="hours">00</span><label>Hrs</label></div>
+            <div class="time-box"><span id="mins">00</span><label>Mins</label></div>
+            <div class="time-box"><span id="secs">00</span><label>Secs</label></div>
+        </div>
+        <p><b>Something magical is about to unfold...</b></p>
+    </div>
+
+    <div id="celebration-screen" class="container">
+        <h1 style="color: var(--primary-pink);">You have a letter!</h1>
+        <div class="envelope-wrapper" id="env" onclick="startTransition()">
+            <div class="letter-preview" id="letter"><br><br><br><br>My Best Friend</div>
+        </div>
+        <p><b>Click the envelope to open</b></p>
+    </div>
+
+    <div id="final-screen" class="container">
+        <div class="message-card">
+            <h1 style="color: var(--primary-pink);">Happy Birthday, Deepthi! ❤️</h1>
+            <div id="typewriter"></div><span class="cursor">|</span>
+        </div>
+
+        <div class="photo-grid" id="photoGrid">
+            <img src="IMG_20211219_112653_466.jpg" alt="Memory 1">
+            <img src="Deepthi.jpeg" alt="Memory 2">
+            <img src="Snapchat-78737341.jpg" alt="Memory 3">
+        </div>
+    </div>
+
+    <script>
+        const birthdayDate = new Date("December 18, 2025 00:00:00").getTime();
+
+        // 1. Timer Logic
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = birthdayDate - now;
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = d;
+            document.getElementById("hours").innerText = h;
+            document.getElementById("mins").innerText = m;
+            document.getElementById("secs").innerText = s;
+
+            if (distance < 0) {
+                clearInterval(timer);
+                document.getElementById("countdown-screen").style.display = "none";
+                document.getElementById("celebration-screen").style.display = "flex";
+            }
+        }, 1000);
+
+        // 2. Updated Transition Logic
+        function startTransition() {
+            const env = document.getElementById("env");
+            const letter = document.getElementById("letter");
+            const audio = document.getElementById("bgMusic");
+            
+            // Play music
+            audio.play().catch(() => {});
+
+            // Get the current position of the letter relative to the viewport
+            const rect = letter.getBoundingClientRect();
+            
+            // Set explicit starting position so it doesn't jump to top-left
+            letter.style.top = rect.top + "px";
+            letter.style.left = rect.left + "px";
+            letter.style.width = rect.width + "px";
+            letter.style.height = rect.height + "px";
+            letter.style.position = "fixed";
+            letter.style.margin = "0";
+            
+            // Step 1: Open Flap
+            env.classList.add("open");
+
+            // Step 2: Lift letter out of envelope smoothly
+            setTimeout(() => {
+                letter.style.top = (rect.top - 100) + "px";
+            }, 600);
+
+            // Step 3: Expand from the current "lifted" position to full screen
+            setTimeout(() => {
+                letter.classList.add("expand");
+                letter.style.top = "0";
+                letter.style.left = "0";
+                letter.style.width = "100vw";
+                letter.style.height = "100vh";
+                letter.innerText = ""; 
+            }, 1300);
+
+            // Step 4: Show Final Content
+            setTimeout(() => {
+                document.getElementById("celebration-screen").style.display = "none";
+                document.getElementById("final-screen").style.display = "flex";
+                document.body.style.backgroundColor = "white"; 
+                document.body.style.overflowY = "auto";
+                startTypewriter();
+                setInterval(createHeart, 300);
+            }, 2300);
+        }
+
+        // 3. Typewriter Logic
+        const message = `To my absolute best friend, \n\nThey say people come and go, but you've been the one constant through every high and every low. Thank you for standing by me when things were tough and for being the first person to cheer when things were great. \n\nYou aren't just a friend; you're the person who makes life a lot more fun and a lot less heavy. Today is all about you, but I'm the lucky one because I get to have you in my life. \n\nLet's make this year your best one yet! ❤️`;
+
+        function startTypewriter() {
+            let i = 0;
+            const target = document.getElementById("typewriter");
+            function type() {
+                if (i < message.length) {
+                    const char = message.charAt(i);
+                    target.innerHTML += char === "\n" ? "<br>" : char;
+                    i++;
+                    setTimeout(type, 40);
+                } else {
+                    document.querySelector(".cursor").style.display = "none";
+                    document.getElementById("photoGrid").classList.add("show");
+                }
+            }
+            type();
+        }
+
+        // 4. Floating Hearts
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = ['❤️', '✨', '💖', '🌸'][Math.floor(Math.random() * 4)];
+            heart.style.left = Math.random() * 100 + "vw";
+            heart.style.fontSize = Math.random() * 20 + 15 + "px";
+            heart.style.animationDuration = (Math.random() * 3 + 3) + "s";
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 5000);
+        }
+    </script>
+</body>
+</html>
